@@ -1,22 +1,32 @@
 #include <vector>
-#include "graph.h"
+#include "max-flow-solver.h"
+#include "graph.cpp"
 
-
-class SimpleFor {
+class PushRelabel: public IMaxFlowSolver {
     Network network;
     ui32 numberVertices;
-    vector < ui32 > currentEdge, height;
+    vector < ui32 > currentEdge, height, sizeHeight;
     vector < ui64 > excess;
+    const ui64 INF = 1e16;
+
+    void gap(ui32 currentHeight) {
+        for (ui32 currentVertex = 0; currentVertex < numberVertices; ++currentVertex)
+            if ((currentHeight < height[currentVertex]) && (height[currentVertex] < numberVertices)) {
+                sizeHeight[height[currentVertex]]--;
+                height[currentVertex] = numberVertices;
+                sizeHeight[height[currentVertex]]++;
+            }
+    }
 
     void push(Edge* edge) {
         ui32 sizePush = min(excess[edge->getBegin()], edge->getPushCapacity());
-        if (edge->getReversed())
+        if (edge->reversed)
         {
-            edge->getReversedEdge()->setFlow(edge->getReversedEdge()->getFlow() - sizePush);
-            edge->setCapacity(edge->getCapacity() - sizePush);
+            edge->reversedEdge->flow -= sizePush;
+            edge->capacity -= sizePush;
         } else {
-            edge->setFlow(edge->getFlow() + sizePush);
-            edge->getReversedEdge()->setCapacity(edge->getReversedEdge()->getCapacity() + sizePush);
+            edge->flow += sizePush;
+            edge->reversedEdge->capacity += sizePush;
         }
         excess[edge->getBegin()] -= sizePush;
         excess[edge->getEnd()] += sizePush;
@@ -24,11 +34,13 @@ class SimpleFor {
 
     void relabel(ui32 vertex) {
         ui32 minv = numberVertices;
+        sizeHeight[height[vertex]]--;
         for (ui32 numberEdge = 0; numberEdge < network.getDegree(vertex); ++numberEdge)
             if (network.getEdge(vertex, numberEdge)->getPushCapacity() > 0)
                 if (minv == numberVertices || height[network.getEdge(vertex, numberEdge)->getEnd()] < height[minv])
                     minv = network.getEdge(vertex, numberEdge)->getEnd();
         height[vertex] = height[minv] + 1;
+        sizeHeight[height[vertex]]++;
     }
 
     void discharge(ui32 vertex) {
@@ -38,6 +50,8 @@ class SimpleFor {
                     push(network.getEdge(vertex, currentEdge[vertex]));
                 currentEdge[vertex]++;
             } else {
+                if (sizeHeight[height[vertex]] == 1)
+                    gap(height[vertex]);
                 relabel(vertex);
                 currentEdge[vertex] = 0;
             }
@@ -48,9 +62,12 @@ class SimpleFor {
             push(network.getEdge(vertex, numberEdge));
     }
 public:
-    SimpleFor(Network &_network) : network(_network), numberVertices(_network.getNumberVertices()) {}
+    PushRelabel(Network &_network) : network(_network), numberVertices(_network.getNumberVertices()) {}
 
     void findMaxFlow() {
+        sizeHeight.resize(2 * numberVertices + 2, 0);
+        sizeHeight[0] = numberVertices - 1;
+        sizeHeight[numberVertices] = 1;
         height.resize(numberVertices, 0);
         height[network.getSource()] = numberVertices;
         excess.resize(numberVertices, 0);

@@ -1,12 +1,14 @@
 #include <queue>
-#include "graph.h"
+#include "max-flow-solver.h"
+#include "graph.cpp"
 
-class MKM {
+class MalhotraKumarMaheshwari: public IMaxFlowSolver {
     Network network;
     ui32 numberVertices;
     vector < bool > deleted;
     vector < ui32 > currentEdge, color;
     vector < ui64 > potential, inPotential, outPotential;
+    const ui64 INF = 1e16;
 
     void updatePotential(ui32 vertex) {
         potential[vertex] = min(inPotential[vertex], outPotential[vertex]);
@@ -18,7 +20,7 @@ class MKM {
         for (ui32 currentEdge = 0; currentEdge < network.getDegree(vertex); ++currentEdge) {
             Edge* thisEdge = network.getEdge(vertex, currentEdge);
             if (color[vertex] == color[thisEdge->getEnd()] + 1)
-                inPotential[vertex] += thisEdge->getReversedEdge()->getPushCapacity();
+                inPotential[vertex] += thisEdge->reversedEdge->getPushCapacity();
             else if (color[vertex] + 1 == color[thisEdge->getEnd()])
                 outPotential[vertex] += thisEdge->getPushCapacity();
         }
@@ -46,13 +48,13 @@ class MKM {
 
     ui32 push(Edge* edge, ui32 wantedSizePush) {
         ui32 sizePush = min(wantedSizePush, edge->getPushCapacity());
-        if (edge->getReversed())
+        if (edge->reversed)
         {
-            edge->getReversedEdge()->setFlow(edge->getReversedEdge()->getFlow() - sizePush);
-            edge->setCapacity(edge->getCapacity() - sizePush);
+            edge->reversedEdge->flow -= sizePush;
+            edge->capacity -= sizePush;
         } else {
-            edge->setFlow(edge->getFlow() + sizePush);
-            edge->getReversedEdge()->setCapacity(edge->getReversedEdge()->getCapacity() + sizePush);
+            edge->flow += sizePush;
+            edge->reversedEdge->capacity += sizePush;
         }
         return sizePush;
     }
@@ -80,7 +82,7 @@ class MKM {
                 Edge* thisEdge;
                 bool edgeIsOk = false;
                 if (toSource && !deleted[nextVertex] && color[nextVertex] + 1 == color[currentVertex]) {
-                    thisEdge = network.getEdge(currentVertex, currentEdge[currentVertex])->getReversedEdge();
+                    thisEdge = network.getEdge(currentVertex, currentEdge[currentVertex])->reversedEdge;
                     edgeIsOk = true;
                 }
                 else if (!toSource && !deleted[nextVertex] && color[nextVertex] == color[currentVertex] + 1) {
@@ -117,12 +119,13 @@ class MKM {
             if (color[thisEdge->getEnd()] == color[vertex] + 1)
                 inPotential[thisEdge->getEnd()] -= thisEdge->getPushCapacity();
             else if ((color[thisEdge->getEnd()] + 1 == color[vertex]))
-                outPotential[thisEdge->getEnd()] -= thisEdge->getReversedEdge()->getPushCapacity();
+                outPotential[thisEdge->getEnd()] -= thisEdge->reversedEdge->getPushCapacity();
             updatePotential(thisEdge->getEnd());
         }
     }
 public:
-    MKM(Network &_network) : network(_network), numberVertices(_network.getNumberVertices()) {}
+    MalhotraKumarMaheshwari(Network &_network) :
+        network(_network), numberVertices(_network.getNumberVertices()) {}
 
     void findMaxFlow() {
         bool can = true;
