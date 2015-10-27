@@ -6,14 +6,14 @@
 class Edge: public IFlowEdge {
     ui32 begin, end;
 public:
-    bool reversed;
-    ui32 capacity, flow;
+    ui32 capacity;
+    i32 flow;
     Edge* reversedEdge;
-    Edge(ui32 _begin, ui32 _end, ui32 _capacity, bool _reversed)
-        : begin(_begin), end(_end), capacity(_capacity), reversed(_reversed), flow(0) {}
+    Edge(ui32 _begin, ui32 _end, ui32 _capacity)
+        : begin(_begin), end(_end), capacity(_capacity), flow(0) {}
 
-    Edge(ui32 _begin, ui32 _end, ui32 _capacity, bool _reversed, Edge* _reversedEdge)
-        : begin(_begin), end(_end), capacity(_capacity), reversed(_reversed), reversedEdge(_reversedEdge), flow(0) {}
+    Edge(ui32 _begin, ui32 _end, ui32 _capacity, Edge* _reversedEdge)
+        : begin(_begin), end(_end), capacity(_capacity), reversedEdge(_reversedEdge), flow(0) {}
 
     ui32 getBegin() {
         return begin;
@@ -23,8 +23,15 @@ public:
         return end;
     }
 
-    ui32 getPushCapacity() {
+    ui32 getCapacity() {
         return capacity - flow;
+    }
+
+    ui32 push(ui32 wantedSizePush) {
+        ui32 sizePush = min(wantedSizePush, getCapacity());
+        flow += sizePush;
+        reversedEdge->flow -= sizePush;
+        return sizePush;
     }
 };
 
@@ -35,8 +42,8 @@ class Network: public INetwork {
     void addEdge(ui32 edgeBegin, ui32 edgeEnd, ui32 edgeCapacity)
     {
         numberEdges++;
-        Edge *directEdge = new Edge(edgeBegin, edgeEnd, edgeCapacity, 0);
-        Edge *reversedEdge = new Edge(edgeEnd, edgeBegin, 0,  1, directEdge);
+        Edge *directEdge = new Edge(edgeBegin, edgeEnd, edgeCapacity);
+        Edge *reversedEdge = new Edge(edgeEnd, edgeBegin, 0, directEdge);
         directEdge->reversedEdge = reversedEdge;
         reversedEdge->reversedEdge = directEdge;
         edgesById.push_back(directEdge);
@@ -78,7 +85,7 @@ public:
     }
 
     void printAnswer(ostream& out) {
-        ui64 answer = 0;
+        i64 answer = 0;
         for (ui32 currentEdge = 0; currentEdge < getDegree(source); ++currentEdge) {
             answer += getEdge(source, currentEdge)->flow;
         }

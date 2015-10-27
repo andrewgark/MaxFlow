@@ -2,7 +2,9 @@
 
 using namespace std;
 
-typedef unsigned long long ui32;
+typedef int i32;
+typedef long long i64;
+typedef unsigned int ui32;
 typedef unsigned long long ui64;
 
 class IEdge {
@@ -14,8 +16,7 @@ public:
 class IFlowEdge {
 public:
     ui32 capacity;
-    ui32 flow;
-    bool reversed;
+    i32 flow;
     IFlowEdge* reversedEdge;
 };
 

@@ -19,15 +19,7 @@ class PushRelabel: public IMaxFlowSolver {
     }
 
     void push(Edge* edge) {
-        ui32 sizePush = min(excess[edge->getBegin()], edge->getPushCapacity());
-        if (edge->reversed)
-        {
-            edge->reversedEdge->flow -= sizePush;
-            edge->capacity -= sizePush;
-        } else {
-            edge->flow += sizePush;
-            edge->reversedEdge->capacity += sizePush;
-        }
+        ui32 sizePush = edge->push(excess[edge->getBegin()]);
         excess[edge->getBegin()] -= sizePush;
         excess[edge->getEnd()] += sizePush;
     }
@@ -36,7 +28,7 @@ class PushRelabel: public IMaxFlowSolver {
         ui32 minv = numberVertices;
         sizeHeight[height[vertex]]--;
         for (ui32 numberEdge = 0; numberEdge < network.getDegree(vertex); ++numberEdge)
-            if (network.getEdge(vertex, numberEdge)->getPushCapacity() > 0)
+            if (network.getEdge(vertex, numberEdge)->getCapacity() > 0)
                 if (minv == numberVertices || height[network.getEdge(vertex, numberEdge)->getEnd()] < height[minv])
                     minv = network.getEdge(vertex, numberEdge)->getEnd();
         height[vertex] = height[minv] + 1;

@@ -7,10 +7,10 @@ int main()
     ui32 numberVertices, numberEdges;
     Network network;
     cin >> network;
-    PushRelabel pushRelabel(network);
-    pushRelabel.findMaxFlow();
-    //MalhotraKumarMaheshwari malhotraKumarMaheshwari(network);
-    //malhotraKumarMaheshwari.findMaxFlow();
+    //PushRelabel pushRelabel(network);
+    //pushRelabel.findMaxFlow();
+    MalhotraKumarMaheshwari malhotraKumarMaheshwari(network);
+    malhotraKumarMaheshwari.findMaxFlow();
     cout << network;
     return 0;
 }

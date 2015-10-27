@@ -20,9 +20,9 @@ class MalhotraKumarMaheshwari: public IMaxFlowSolver {
         for (ui32 currentEdge = 0; currentEdge < network.getDegree(vertex); ++currentEdge) {
             Edge* thisEdge = network.getEdge(vertex, currentEdge);
             if (color[vertex] == color[thisEdge->getEnd()] + 1)
-                inPotential[vertex] += thisEdge->reversedEdge->getPushCapacity();
+                inPotential[vertex] += thisEdge->reversedEdge->getCapacity();
             else if (color[vertex] + 1 == color[thisEdge->getEnd()])
-                outPotential[vertex] += thisEdge->getPushCapacity();
+                outPotential[vertex] += thisEdge->getCapacity();
         }
         updatePotential(vertex);
     }
@@ -37,26 +37,12 @@ class MalhotraKumarMaheshwari: public IMaxFlowSolver {
             queueBFS.pop();
             for (ui32 currentEdge = 0; currentEdge < network.getDegree(currentVertex); ++currentEdge) {
                 Edge* thisEdge = network.getEdge(currentVertex, currentEdge);
-                if (color[thisEdge->getEnd()] == numberVertices &&
-                     thisEdge->getPushCapacity() > 0) {
+                if (color[thisEdge->getEnd()] == numberVertices && thisEdge->getCapacity() > 0) {
                     color[thisEdge->getEnd()] = color[currentVertex] + 1;
                     queueBFS.push(thisEdge->getEnd());
                 }
             }
         }
-    }
-
-    ui32 push(Edge* edge, ui32 wantedSizePush) {
-        ui32 sizePush = min(wantedSizePush, edge->getPushCapacity());
-        if (edge->reversed)
-        {
-            edge->reversedEdge->flow -= sizePush;
-            edge->capacity -= sizePush;
-        } else {
-            edge->flow += sizePush;
-            edge->reversedEdge->capacity += sizePush;
-        }
-        return sizePush;
     }
 
     void sendFlow(ui32 vertex, ui64 sizeFlow, bool toSource) {
@@ -90,7 +76,7 @@ class MalhotraKumarMaheshwari: public IMaxFlowSolver {
                     edgeIsOk = true;
                 }
                 if (edgeIsOk) {
-                    ui32 curSizePush = push(thisEdge, extra[currentVertex]);
+                    ui32 curSizePush = thisEdge->push(extra[currentVertex]);
                     if (extra[nextVertex] == 0)
                         queueFlow.push(nextVertex);
                     extra[nextVertex] += curSizePush;
@@ -117,9 +103,9 @@ class MalhotraKumarMaheshwari: public IMaxFlowSolver {
         for (ui32 i = 0; i < network.getDegree(vertex); ++i) {
             Edge* thisEdge = network.getEdge(vertex, i);
             if (color[thisEdge->getEnd()] == color[vertex] + 1)
-                inPotential[thisEdge->getEnd()] -= thisEdge->getPushCapacity();
+                inPotential[thisEdge->getEnd()] -= thisEdge->getCapacity();
             else if ((color[thisEdge->getEnd()] + 1 == color[vertex]))
-                outPotential[thisEdge->getEnd()] -= thisEdge->reversedEdge->getPushCapacity();
+                outPotential[thisEdge->getEnd()] -= thisEdge->reversedEdge->getCapacity();
             updatePotential(thisEdge->getEnd());
         }
     }
