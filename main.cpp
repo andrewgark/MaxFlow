@@ -1,10 +1,9 @@
 #include <iostream>
-#include "malhotra-kumar-maheshwari.cpp"
-#include "push-relabel.cpp"
+#include "malhotra-kumar-maheshwari.hpp"
+#include "push-relabel.hpp"
 
 int main()
 {
-    ui32 numberVertices, numberEdges;
     Network network;
     cin >> network;
     //PushRelabel pushRelabel(network);
